@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Allocate — Personal Finance</title>
+
+    <!-- Playfair Display (editorial) + Instrument Sans (refined body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Instrument+Sans:wght@300;400;500;600&display=swap"
+        rel="stylesheet" />
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+    <!-- Ambient gradient orbs -->
+    <div class="ambient-bg" aria-hidden="true">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <!-- Film-grain texture -->
+    <canvas class="grain-canvas" id="grainCanvas" aria-hidden="true"></canvas>
+
+    <!-- ═══ HEADER ═══════════════════════════════════════ -->
+    <header class="site-header" id="siteHeader">
+        <div class="hdr-inner">
+
+            <div class="brand">
+                <svg class="brand-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <circle cx="10" cy="10" r="3.5" stroke="currentColor" stroke-width="1.2" />
+                    <circle cx="10" cy="10" r="8.5" stroke="currentColor" stroke-width="0.7"
+                        stroke-dasharray="1.8 2.8" />
+                </svg>
+                <span class="brand-name">Allocate</span>
+            </div>
+
+            <!-- Month rail — injected by JS -->
+            <nav class="month-rail" id="monthNav" role="tablist" aria-label="Month selector">
+                <div class="month-rail-pill" id="monthPill"></div>
+            </nav>
+
+            <div class="hdr-actions">
+                <button class="hdr-btn" id="exportBtn" title="Export CSV">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    <span>Export</span>
+                </button>
+                <button class="hdr-btn hdr-btn--ghost" id="resetBtn" title="Reset year">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <polyline points="1 4 1 10 7 10" />
+                        <path d="M3.51 15a9 9 0 1 0 .49-3.88" />
+                    </svg>
+                </button>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <svg class="t-sun" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                        <line x1="1" y1="12" x2="3" y2="12" />
+                        <line x1="21" y1="12" x2="23" y2="12" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                    <svg class="t-moon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
+                </button>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- ═══ HERO ══════════════════════════════════════════ -->
+    <section class="hero">
+        <div class="hero-inner">
+
+            <div class="hero-meta">
+                <span class="hero-meta-line"></span>
+                <span class="hero-meta-year" id="heroYear">2025</span>
+                <span class="hero-meta-sep">—</span>
+                <span class="hero-meta-month" id="heroMonth">January</span>
+                <span class="hero-meta-line"></span>
+            </div>
+
+            <div class="hero-input-row">
+                <span class="hero-currency">$</span>
+                <input type="number" id="salaryInput" class="hero-input" placeholder="0" min="0" step="1"
+                    aria-label="Net monthly salary" autocomplete="off" />
+            </div>
+
+            <p class="hero-hint">Enter your net monthly salary</p>
+
+            <!-- Live allocation bar -->
+            <div class="hero-bar-wrap" id="heroAllocBar">
+                <div class="hero-bar-track">
+                    <div class="hero-bar-seg" id="hbarSavings" data-label="Savings"></div>
+                    <div class="hero-bar-seg" id="hbarInvestments" data-label="Investments"></div>
+                    <div class="hero-bar-seg" id="hbarExpenses" data-label="Expenses"></div>
+                    <div class="hero-bar-seg" id="hbarLifestyle" data-label="Lifestyle"></div>
+                </div>
+                <div class="hero-bar-legend" id="heroBarLegend"></div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ═══ MAIN ══════════════════════════════════════════ -->
+    <main class="main-wrap">
+
+        <!-- ── ENTRY SECTION ──────────────────────────────── -->
+        <section class="section entry-section" id="entrySection">
+            <header class="section-head">
+                <div class="section-head-left">
+                    <h2 class="section-title">Monthly Entry</h2>
+                    <p class="section-sub"><em id="activeMonthLabel">January</em> · adjust your splits</p>
+                </div>
+                <button class="save-btn" id="saveMonthBtn">
+                    Save <span id="saveMonthName">Jan</span>
+                </button>
+            </header>
+
+            <div class="entry-layout">
+
+                <!-- Sliders -->
+                <div class="sliders-card card">
+                    <div id="allocationsList" class="alloc-list"></div>
+                    <div class="alloc-summary">
+                        <span class="alloc-summary-label">Total allocation</span>
+                        <span class="alloc-summary-val" id="allocTotalVal">100%</span>
+                    </div>
+                </div>
+
+                <!-- Live preview tiles -->
+                <div class="preview-col">
+                    <div class="preview-total-row">
+                        <span class="preview-total-label">Allocated this month</span>
+                        <span class="preview-total-val" id="previewTotal">$0</span>
+                    </div>
+                    <div class="preview-tiles" id="previewCards"></div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ── DASHBOARD ──────────────────────────────────── -->
+        <section class="section dashboard-section" id="dashboardSection">
+            <header class="section-head">
+                <div class="section-head-left">
+                    <h2 class="section-title">Year Overview</h2>
+                    <p class="section-sub"><span id="recordedCount">0</span> months recorded · year-to-date</p>
+                </div>
+            </header>
+
+            <!-- KPI tiles -->
+            <div class="kpi-grid">
+                <article class="kpi-card" data-cat="savings">
+                    <div class="kpi-card-top">
+                        <span class="kpi-label">Savings</span>
+                        <div class="kpi-ring-wrap">
+                            <svg class="kpi-ring" viewBox="0 0 36 36">
+                                <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" stroke-width="1.8"
+                                    class="ring-track" />
+                                <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" stroke-width="1.8"
+                                    class="ring-progress" stroke-dasharray="0 87.96" stroke-linecap="round"
+                                    transform="rotate(-90 18 18)" />
+                            </svg>
+                            <span class="kpi-ring-pct" id="ringPctSavings">35%</span>
+                        </div>
+                    </div>
+                    <span class="kpi-val" id="ytdSavings">$0</span>
+                    <div class="kpi-fill-bar">
+                        <div class="kpi-fill" id="barSavings"></div>
+                    </div>
+                </article>
+
+                <article class="kpi-card" data-cat="investments">
+                    <div class="kpi-card-top">
+                        <span class="kpi-label">Investments</span>
+                        <div class="kpi-ring-wrap">
+                            <svg class="kpi-ring" viewBox="0 0 36 36">
+                                <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" stroke-width="1.8"
+                                    class="ring-track" />
+                                <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" stroke-width="1.8"
+                                    class="ring-progress" stroke-dasharray="0 87.96" stroke-linecap="round"
+                                    transform="rotate(-90 18 18)" />
+                            </svg>
+                            <span class="kpi-ring-pct" id="ringPctInvestments">10%</span>
+                        </div>
+                    </div>
+                    <span class="kpi-val" id="ytdInvestments">$0</span>
+                    <div class="kpi-fill-bar">
+                        <div class="kpi-fill" id="barInvestments"></div>
+                    </div>
+                </article>
+
+                <article class="kpi-card" data-cat="expenses">
+                    <div class="kpi-card-top">
+                        <span class="kpi-label">Fixed Expenses</span>
+                        <div class="kpi-ring-wrap">
+                            <svg class="kpi-ring" viewBox="0 0 36 36">
+                                <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" stroke-width="1.8"
+                                    class="ring-track" />
+                                <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" stroke-width="1.8"
+                                    class="ring-progress" stroke-dasharray="0 87.96" stroke-linecap="round"
+                                    transform="rotate(-90 18 18)" />
+                            </svg>
+                            <span class="kpi-ring-pct" id="ringPctExpenses">43%</span>
+                        </div>
+                    </div>
+                    <span class="kpi-val" id="ytdExpenses">$0</span>
+                    <div class="kpi-fill-bar">
+                        <div class="kpi-fill" id="barExpenses"></div>
+                    </div>
+                </article>
+
+                <article class="kpi-card" data-cat="lifestyle">
+                    <div class="kpi-card-top">
+                        <span class="kpi-label">Lifestyle</span>
+                        <div class="kpi-ring-wrap">
+                            <svg class="kpi-ring" viewBox="0 0 36 36">
+                                <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" stroke-width="1.8"
+                                    class="ring-track" />
+                                <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" stroke-width="1.8"
+                                    class="ring-progress" stroke-dasharray="0 87.96" stroke-linecap="round"
+                                    transform="rotate(-90 18 18)" />
+                            </svg>
+                            <span class="kpi-ring-pct" id="ringPctLifestyle">12%</span>
+                        </div>
+                    </div>
+                    <span class="kpi-val" id="ytdLifestyle">$0</span>
+                    <div class="kpi-fill-bar">
+                        <div class="kpi-fill" id="barLifestyle"></div>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-row">
+                <div class="chart-card card chart-card--bar">
+                    <p class="chart-eyebrow">Monthly breakdown</p>
+                    <div class="chart-area"><canvas id="barChart"></canvas></div>
+                </div>
+                <div class="chart-card card chart-card--donut">
+                    <p class="chart-eyebrow">Annual split</p>
+                    <div class="chart-area chart-area--donut"><canvas id="pieChart"></canvas></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── YEAR TABLE ────────────────────────────────── -->
+        <section class="section table-section">
+            <header class="section-head">
+                <div class="section-head-left">
+                    <h2 class="section-title">Full-Year Summary</h2>
+                    <p class="section-sub">Click any row to navigate</p>
+                </div>
+            </header>
+
+            <div class="table-wrap card">
+                <table class="yr-table" id="yearTable">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Salary</th>
+                            <th>Savings</th>
+                            <th>Investments</th>
+                            <th>Expenses</th>
+                            <th>Lifestyle</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="yearTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ═══ MODAL ═════════════════════════════════════════ -->
+    <div class="modal-scrim" id="resetModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-box">
+            <span class="modal-glyph">◎</span>
+            <h3 class="modal-title" id="modalTitle">Reset <em id="modalYear">2025</em></h3>
+            <p class="modal-desc">All saved entries will be permanently deleted. This cannot be undone.</p>
+            <div class="modal-actions">
+                <button class="modal-cancel" id="cancelReset">Cancel</button>
+                <button class="modal-confirm" id="confirmReset">Reset Year</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ TOAST ═════════════════════════════════════════ -->
+    <div class="toast" id="toast" role="status" aria-live="polite">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <polyline points="20 6 9 17 4 12" />
+        </svg>
+        <span id="toastMsg">Saved</span>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
